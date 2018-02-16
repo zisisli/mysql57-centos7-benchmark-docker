@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "drop table if existssbtest;" | ${MYSQL_PREFIX}/bin/mysql -u ${MYSQL_USER} -p${MYSQL_PASSWORD} -h 127.0.0.1 ${MYSQL_DATABASE}
+echo "drop table if exists sbtest;" | ${MYSQL_PREFIX}/bin/mysql -u ${MYSQL_USER} -p${MYSQL_PASSWORD} -h 127.0.0.1 ${MYSQL_DATABASE}
 
 sysbench \
   --test=oltp \
