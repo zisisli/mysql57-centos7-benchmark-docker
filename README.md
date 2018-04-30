@@ -1,14 +1,32 @@
-Performance tests mysql57 on docker
+# Performance tests mysql57/cpu on docker
 
-
-Execute tests on docker container:
+## build
 ```
-echo "drop table sbtest;" | mysql -u user -ppass -h 127.0.0.1 db
-sysbench --test=oltp --oltp-table-size=20000 --mysql-user=user --db-driver=mysql --mysql-password=pass   --mysql-db=db --mysql-host=127.0.0.1 prepare
-sysbench --test=oltp --oltp-table-size=20000 --mysql-user=user --db-driver=mysql --mysql-password=pass   --mysql-db=db --mysql-host=127.0.0.1 run
+# docker build -t mysql57centos7 .
+Sending build context to Docker daemon 914.9 kB
+...
+Removing intermediate container a17ec42464c4
+Successfully built e297a19834b3
 ```
 
+## run
+Start container:
+```
+# docker run -d --name mysql57centos7 -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -p 3306:3306 mysql57centos7
+7b69b9ce6e9fab478dc284863a89c628aec39999eab8657222d8b3aae4a6dc3a
+```
 
+Run test:
+```
+# docker exec 7b69b9ce6e9fab478dc284863a89c628aec39999eab8657222d8b3aae4a6dc3a /scripts/00-mysql-bench.sh
+```
+
+Execute manual tests:
+```
+# docker exec 7b69b9ce6e9fab478dc284863a89c628aec39999eab8657222d8b3aae4a6dc3a bash -c '/usr/bin/sysbench --test=cpu --num-threads=4 run'
+```
+
+## OpenShift
 For OpenShift, adjust deployment config:
 ```
 ...
