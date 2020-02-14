@@ -3,7 +3,7 @@ Performance tests mysql57 on docker
 # Deploy
 ## oc new-app
 ```
-oc new-app -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db  https://gitlab.consol.de/zisis/mysql57-centos7-benchmark-docker.git
+oc new-app -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db  https://github.com/zisisli/mysql57-centos7-benchmark-docker.git
 ```
 ## local build
 ```
