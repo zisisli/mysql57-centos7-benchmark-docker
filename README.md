@@ -14,6 +14,13 @@ $ oc start-build perftest --from-dir=.
 $ oc new-app perftest MYSQL_USER=user MYSQL_PASSWORD=pass MYSQL_DATABASE=db
 ```
 
+# set persistent volumes
+(optional)
+```
+oc set volume dc/mysql57-centos7-benchmark-docker --add --mount-path=/var/lib/mysql --name=mysql-storage
+oc set volume dc/mysql57-centos7-benchmark-docker --add --name=mysql-storage -t pvc --claim-size=5G --overwrite
+```
+
 
 # Test
 
