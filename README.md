@@ -1,43 +1,124 @@
-# Performance tests mysql57/cpu on docker
+Performance tests mysql57 on docker
 
-## build
+# Deploy
+## oc new-app
 ```
-# docker build -t mysql57centos7 .
-Sending build context to Docker daemon 914.9 kB
+oc new-app -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db  https://gitlab.consol.de/zisis/mysql57-centos7-benchmark-docker.git
+```
+## local build
+```
+$ oc new-project mysql-perftest
+$ oc new-build --name perftest --binary --strategy docker
+$ oc start-build perftest --from-dir=.
+// wait for build
+$ oc new-app perftest MYSQL_USER=user MYSQL_PASSWORD=pass MYSQL_DATABASE=db
+```
+
+
+# Test
+
+## script
+```
+$ oc get pods
+$ oc rsh <POD>
+$ sh-4.2$ /scripts/00-mysql-bench.sh
 ...
-Removing intermediate container a17ec42464c4
-Successfully built e297a19834b3
 ```
 
-## run
-Start container:
+## manually
+Execute tests on docker container:
 ```
-# docker run -d --name mysql57centos7 -e MYSQL_USER=user -e MYSQL_PASSWORD=pass -e MYSQL_DATABASE=db -p 3306:3306 mysql57centos7
-7b69b9ce6e9fab478dc284863a89c628aec39999eab8657222d8b3aae4a6dc3a
-```
-
-Run test:
-```
-# docker exec 7b69b9ce6e9fab478dc284863a89c628aec39999eab8657222d8b3aae4a6dc3a /scripts/00-mysql-bench.sh
+echo "drop table sbtest;" | mysql -u user -ppass -h 127.0.0.1 db
+sysbench --test=oltp --oltp-table-size=20000 --mysql-user=user --db-driver=mysql --mysql-password=pass   --mysql-db=db --mysql-host=127.0.0.1 prepare
+sysbench --test=oltp --oltp-table-size=20000 --mysql-user=user --db-driver=mysql --mysql-password=pass   --mysql-db=db --mysql-host=127.0.0.1 run
 ```
 
-Execute manual tests:
+# Sample results
+## FreeNAS storage
 ```
-# docker exec 7b69b9ce6e9fab478dc284863a89c628aec39999eab8657222d8b3aae4a6dc3a bash -c '/usr/bin/sysbench --test=cpu --num-threads=4 run'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+sysbench 0.4.12.10:  multi-threaded system evaluation benchmark
+
+Creating table 'sbtest'...
+Creating 20000 records in table 'sbtest'...
+sysbench 0.4.12.10:  multi-threaded system evaluation benchmark
+
+Running the test with following options:
+Number of threads: 1
+Random number generator seed is 0 and will be ignored
+
+
+Doing OLTP test.
+Running mixed OLTP test
+Using Special distribution (12 iterations,  1 pct of values are returned in 75 pct cases)
+Using "BEGIN" for starting transactions
+Using auto_inc on the id column
+Maximum number of requests for OLTP test is limited to 10000
+Using 1 test tables
+Threads started!
+Done.
+
+OLTP test statistics:
+    queries performed:
+        read:                            140000
+        write:                           50000
+        other:                           20000
+        total:                           210000
+    transactions:                        10000  (185.06 per sec.)
+    deadlocks:                           0      (0.00 per sec.)
+    read/write requests:                 190000 (3516.23 per sec.)
+    other operations:                    20000  (370.13 per sec.)
+
+General statistics:
+    total time:                          54.0351s
+    total number of events:              10000
+    total time taken by event execution: 53.9484
+    response time:
+         min:                                  3.89ms
+         avg:                                  5.39ms
+         max:                                162.77ms
+         approx.  95 percentile:               7.21ms
+
+Threads fairness:
+    events (avg/stddev):           10000.0000/0.00
+    execution time (avg/stddev):   53.9484/0.00
+
 ```
 
-## OpenShift
-For OpenShift, adjust deployment config:
+## local hdd
 ```
-...
-    spec:
-      containers:
-      - env:
-        - name: MYSQL_USER
-          value: user
-        - name: MYSQL_PASSWORD
-          value: pass
-        - name: MYSQL_DATABASE
-          value: db
-...
+Doing OLTP test.
+Running mixed OLTP test
+Using Special distribution (12 iterations,  1 pct of values are returned in 75 pct cases)
+Using "BEGIN" for starting transactions
+Using auto_inc on the id column
+Maximum number of requests for OLTP test is limited to 10000
+Using 1 test tables
+Threads started!
+Done.
+
+OLTP test statistics:
+    queries performed:
+        read:                            140000
+        write:                           50000
+        other:                           20000
+        total:                           210000
+    transactions:                        10000  (234.14 per sec.)
+    deadlocks:                           0      (0.00 per sec.)
+    read/write requests:                 190000 (4448.65 per sec.)
+    other operations:                    20000  (468.28 per sec.)
+
+General statistics:
+    total time:                          42.7096s
+    total number of events:              10000
+    total time taken by event execution: 42.6335
+    response time:
+         min:                                  2.71ms
+         avg:                                  4.26ms
+         max:                                331.61ms
+         approx.  95 percentile:               5.89ms
+
+Threads fairness:
+    events (avg/stddev):           10000.0000/0.00
+    execution time (avg/stddev):   42.6335/0.00
 ```
